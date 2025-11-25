@@ -33,6 +33,10 @@ inputs:
     description: 'Container registry server url'
     required: true
     default: ''
+  endpoint:
+    description: 'Container registry endpoint for OpenAPI'
+    required: false
+    default: ''
 branding:
   color: 'green'
   icon: 'anchor'

@@ -352,4 +352,170 @@ describe('run', () => {
         // Act & Assert
         await expect(run()).rejects.toThrow(errorMessage);
     });
+
+    // Tests for endpoint handling logic
+    test('should use custom endpoint when provided', async () => {
+        // Arrange
+        const mockResult = {
+            data: {
+                tempUserName: 'temp-user',
+                authorizationToken: 'temp-token'
+            }
+        };
+
+        const mockROAClient = {
+            request: jest.fn().mockResolvedValue(mockResult)
+        };
+
+        ROAClient.mockImplementation(() => mockROAClient);
+
+        Docker.getExecOutput.mockResolvedValue({
+            stderr: '',
+            exitCode: 0
+        });
+
+        core.getInput.mockImplementation((name) => {
+            switch (name) {
+                case 'access-key-id': 
+                    return 'test-access-key-id';
+                case 'access-key-secret': 
+                    return 'test-access-key-secret';
+                case 'region-id': 
+                    return 'cn-hangzhou';
+                case 'instance-id': 
+                    return '';
+                case 'endpoint':
+                    return 'https://custom.endpoint.com';
+                case 'login-server': 
+                    return '';
+                default: 
+                    return '';
+            }
+        });
+
+        // Act
+        await run();
+
+        // Assert
+        expect(ROAClient).toHaveBeenCalledWith({
+            accessKeyId: 'test-access-key-id',
+            accessKeySecret: 'test-access-key-secret',
+            securityToken: '',
+            endpoint: 'https://custom.endpoint.com', // Should use custom endpoint
+            apiVersion: '2016-06-07'
+        });
+
+        expect(mockROAClient.request).toHaveBeenCalledWith('GET', '/tokens');
+    });
+
+    test('should use default endpoint when endpoint is not provided', async () => {
+        // Arrange
+        const mockResult = {
+            data: {
+                tempUserName: 'temp-user',
+                authorizationToken: 'temp-token'
+            }
+        };
+
+        const mockROAClient = {
+            request: jest.fn().mockResolvedValue(mockResult)
+        };
+
+        ROAClient.mockImplementation(() => mockROAClient);
+
+        Docker.getExecOutput.mockResolvedValue({
+            stderr: '',
+            exitCode: 0
+        });
+
+        core.getInput.mockImplementation((name) => {
+            switch (name) {
+                case 'access-key-id': 
+                    return 'test-access-key-id';
+                case 'access-key-secret': 
+                    return 'test-access-key-secret';
+                case 'region-id': 
+                    return 'cn-hangzhou';
+                case 'instance-id': 
+                    return '';
+                case 'endpoint':
+                    return ''; // Empty endpoint
+                case 'login-server': 
+                    return '';
+                default: 
+                    return '';
+            }
+        });
+
+        // Spy on getAPIEndpoint
+        const { getAPIEndpoint } = require('../src/login.js');
+        jest.spyOn({ getAPIEndpoint }, 'getAPIEndpoint');
+        // Act
+        await run();
+
+        // Assert
+        expect(ROAClient).toHaveBeenCalledWith({
+            accessKeyId: 'test-access-key-id',
+            accessKeySecret: 'test-access-key-secret',
+            securityToken: '',
+            endpoint: 'https://cr.cn-hangzhou.aliyuncs.com', // Should use default endpoint
+            apiVersion: '2016-06-07'
+        });
+
+        expect(mockROAClient.request).toHaveBeenCalledWith('GET', '/tokens');
+    });
+
+    test('should use default endpoint when endpoint is empty string', async () => {
+        // Arrange
+        const mockResult = {
+            data: {
+                tempUserName: 'temp-user',
+                authorizationToken: 'temp-token'
+            }
+        };
+
+        const mockROAClient = {
+            request: jest.fn().mockResolvedValue(mockResult)
+        };
+
+        ROAClient.mockImplementation(() => mockROAClient);
+
+        Docker.getExecOutput.mockResolvedValue({
+            stderr: '',
+            exitCode: 0
+        });
+
+        core.getInput.mockImplementation((name) => {
+            switch (name) {
+                case 'access-key-id': 
+                    return 'test-access-key-id';
+                case 'access-key-secret': 
+                    return 'test-access-key-secret';
+                case 'region-id': 
+                    return 'cn-hangzhou';
+                case 'instance-id': 
+                    return '';
+                case 'endpoint':
+                    return ''; // Empty string endpoint
+                case 'login-server': 
+                    return '';
+                default: 
+                    return '';
+            }
+        });
+
+        // Act
+        await run();
+
+        // Assert
+        expect(ROAClient).toHaveBeenCalledWith({
+            accessKeyId: 'test-access-key-id',
+            accessKeySecret: 'test-access-key-secret',
+            securityToken: '',
+            endpoint: 'https://cr.cn-hangzhou.aliyuncs.com', // Should use default endpoint
+            apiVersion: '2016-06-07'
+        });
+
+        expect(mockROAClient.request).toHaveBeenCalledWith('GET', '/tokens');
+    });
 });
