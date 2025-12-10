@@ -22,12 +22,16 @@ async function run() {
     let regionId = core.getInput('region-id', { required: false });
     let instanceId = core.getInput('instance-id', { required: false });
     let loginServer = core.getInput('login-server', { required: false });
-    let endpoint = getAPIEndpoint(regionId);
+    let endpoint = core.getInput("endpoint", { required: false });
 
     if (accessKeyId.length > 0) {
         if (regionId.length === 0) {
             core.setFailed(`Action failed for region-id is missing`);
             return;
+        }
+
+        if (endpoint.length === 0) {
+            endpoint = getAPIEndpoint(regionId)
         }
 
         if (instanceId.length === 0) {
